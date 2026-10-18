@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>SCL-90 症状自评量表</title>
+  <style>
+    /* ===== 主题样式 ===== */
+    :root {
+      --bg: #ffffff;
+      --surface: #f7f7f7;
+      --surface-2: #efefef;
+      --text: #1a1a1a;
+      --text-secondary: #555555;
+      --text-muted: #888888;
+      --border: #d9d9d9;
+      --border-strong: #b0b0b0;
+      --accent: #1a1a1a;
+      --accent-text: #ffffff;
+      --positive-bg: #e8e8e8;
+      --positive-border: #1a1a1a;
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      --radius: 10px;
+      --radius-sm: 6px;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    [data-theme="dark"] {
+      --bg: #121212;
+      --surface: #1e1e1e;
+      --surface-2: #2a2a2a;
+      --text: #ededed;
+      --text-secondary: #b0b0b0;
+      --text-muted: #777777;
+      --border: #3a3a3a;
+      --border-strong: #555555;
+      --accent: #ededed;
+      --accent-text: #121212;
+      --positive-bg: #2a2a2a;
+      --positive-border: #ededed;
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #121212;
+        --surface: #1e1e1e;
+        --surface-2: #2a2a2a;
+        --text: #ededed;
+        --text-secondary: #b0b0b0;
+        --text-muted: #777777;
+        --border: #3a3a3a;
+        --border-strong: #555555;
+        --accent: #ededed;
+        --accent-text: #121212;
+        --positive-bg: #2a2a2a;
+        --positive-border: #ededed;
+        --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+      }
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      min-height: 100vh;
+      transition: background 0.2s, color 0.2s;
+      padding: 0 0 env(safe-area-inset-bottom, 0);
+    }
+
+    .app {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    /* ===== 头部 ===== */
+    .header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .header h1 {
+      font-size: clamp(1.15rem, 4vw, 1.5rem);
+      font-weight: 650;
+      letter-spacing: -0.01em;
+      line-height: 1.3;
+    }
+
+    .header .subtitle {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    .theme-toggle {
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      transition: background 0.15s, border-color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .theme-toggle:active {
+      background: var(--surface-2);
+      transform: scale(0.96);
+    }
+
+    /* ===== 指导语卡片 ===== */
+    .guide {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      margin-bottom: 18px;
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+    }
+
+    .guide strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .scale-key {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      margin-top: 10px;
+      font-size: 0.82rem;
+    }
+
+    .scale-key span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .dot {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border-strong);
+    }
+
+    .dot.filled {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    /* ===== 进度条 ===== */
+    .progress-wrap {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: var(--bg);
+      padding: 10px 0 8px;
+      margin-bottom: 6px;
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+
+    .progress-meta .count strong {
+      color: var(--text);
+      font-weight: 650;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .progress-track {
+      height: 5px;
+      border-radius: 99px;
+      background: var(--surface-2);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 99px;
+      background: var(--accent);
+      transition: width 0.25s ease;
+    }
+
+    /* ===== 题目列表 ===== */
+    .questions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .q-item {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 13px 14px;
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      border: 1px solid transparent;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .q-item.answered {
+      border-color: var(--border);
+    }
+
+    .q-item.missing {
+      border-color: var(--accent);
+      background: var(--surface-2);
+    }
+
+    .q-text {
+      font-size: 0.93rem;
+      line-height: 1.5;
+      display: flex;
+      gap: 8px;
+    }
+
+    .q-num {
+      flex-shrink: 0;
+      min-width: 2.1em;
+      font-size: 0.78rem;
+      font-weight: 650;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+      padding-top: 2px;
+    }
+
+    .options {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .opt {
+      position: relative;
+      flex: 1 1 0;
+      min-width: 52px;
+    }
+
+    .opt input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+      pointer-events: none;
+    }
+
+    .opt label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      padding: 4px 2px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border);
+      background: var(--bg);
+      color: var(--text-secondary);
+      font-size: 0.76rem;
+      text-align: center;
+      line-height: 1.25;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.12s, border-color 0.12s, color 0.12s;
+    }
+
+    .opt input:checked + label {
+      background: var(--positive-bg);
+      border-color: var(--positive-border);
+      color: var(--text);
+      font-weight: 650;
+    }
+
+    .opt input:focus-visible + label {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* ===== 底部操作栏 ===== */
+    .actions {
+      position: sticky;
+      bottom: 0;
+      z-index: 20;
+      display: flex;
+      gap: 10px;
+      padding: 12px 0 calc(12px + env(safe-area-inset-bottom, 0));
+      background: linear-gradient(to top, var(--bg) 70%, transparent);
+    }
+
+    .btn {
+      flex: 1;
+      min-height: 48px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border-strong);
+      background: var(--bg);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn:active { transform: scale(0.985); }
+
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-text);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-ghost {
+      flex: 0 0 auto;
+      padding: 0 18px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      border-color: var(--border);
+    }
+
+    /* ===== 结果面板 ===== */
+    .result-panel {
+      display: none;
+      animation: fadeUp 0.35s ease both;
+    }
+
+    .result-panel.visible { display: block; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 14px;
+    }
+
+    .result-card h2 {
+      font-size: 1rem;
+      font-weight: 650;
+      margin-bottom: 14px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .stat {
+      text-align: center;
+      padding: 12px 6px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+
+    .stat .val {
+      font-size: 1.35rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.2;
+    }
+
+    .stat .lbl {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    .screen-alert {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border-strong);
+      background: var(--bg);
+      font-size: 0.86rem;
+      line-height: 1.6;
+    }
+
+    .screen-alert.positive {
+      border-color: var(--accent);
+      font-weight: 500;
+    }
+
+    .screen-alert.neutral {
+      border-color: var(--border);
+      color: var(--text-secondary);
+    }
+
+    /* ===== 因子条形图 ===== */
+    .factor-list {
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+    }
+
+    .factor-row {
+      display: grid;
+      grid-template-columns: 5.5em 1fr 3.2em;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.84rem;
+    }
+
+    .factor-name {
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .factor-bar-track {
+      height: 10px;
+      border-radius: 99px;
+      background: var(--surface-2);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .factor-bar {
+      height: 100%;
+      border-radius: 99px;
+      background: var(--accent);
+      transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+      width: 0%;
+    }
+
+    .factor-score {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-weight: 650;
+      color: var(--text);
+    }
+
+    .factor-note {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      grid-column: 1 / -1;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.68rem;
+      padding: 1px 7px;
+      border-radius: 99px;
+      border: 1px solid var(--border-strong);
+      color: var(--text-secondary);
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+
+    .badge.warn {
+      background: var(--accent);
+      color: var(--accent-text);
+      border-color: var(--accent);
+    }
+
+    /* ===== 免责声明 ===== */
+    .disclaimer {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+      padding: 14px 16px;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-sm);
+      margin-top: 6px;
+    }
+
+    .hidden { display: none !important; }
+
+    /* ===== 移动端微调 ===== */
+    @media (max-width: 540px) {
+      .app { padding: 12px; }
+      .guide { padding: 14px; }
+      .q-item { padding: 11px 12px; gap: 8px; }
+      .opt { min-width: 46px; }
+      .opt label { min-height: 36px; font-size: 0.7rem; }
+      .summary-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+      .stat .val { font-size: 1.15rem; }
+      .factor-row { grid-template-columns: 4.8em 1fr 2.8em; gap: 7px; font-size: 0.79rem; }
+      .result-card { padding: 16px; }
+    }
+
+    @media (max-width: 380px) {
+      .options { gap: 4px; }
+      .opt { min-width: 0; }
+      .opt label { font-size: 0.65rem; padding: 2px 1px; min-height: 34px; }
+      .btn-ghost { padding: 0 12px; font-size: 0.82rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div>
+        <h1>SCL-90 症状自评量表</h1>
+        <div class="subtitle">90 项症状清单 · 最近一周自评</div>
+      </div>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="切换黑白模式" title="切换黑白模式">◐</button>
+    </header>
+
+    <div id="surveyArea">
+      <div class="guide">
+        <strong>指导语：</strong>以下列出了一些人可能有的病痛或问题。请仔细阅读每一条，根据<strong>最近一周内</strong>下列问题影响你或使你感到苦恼的程度，选择最符合的选项。请勿漏答。
+        <div class="scale-key">
+          <span><i class="dot"></i> 没有</span>
+          <span><i class="dot"></i> 很轻</span>
+          <span><i class="dot"></i> 中等</span>
+          <span><i class="dot"></i> 偏重</span>
+          <span><i class="dot filled"></i> 严重</span>
+        </div>
+      </div>
+
+      <div class="progress-wrap">
+        <div class="progress-meta">
+          <span class="count">已完成 <strong id="answeredCount">0</strong> / 90</span>
+          <span id="progressPercent">0%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+
+      <form id="sclForm" class="questions" novalidate></form>
+
+      <div class="actions">
+        <button class="btn btn-ghost" type="button" id="resetBtn">重新开始</button>
+        <button class="btn btn-primary" type="submit" form="sclForm" id="submitBtn" disabled>查看结果</button>
+      </div>
+    </div>
+
+    <div id="resultArea" class="result-panel" aria-live="polite">
+      <!-- 结果由 JS 动态渲染 -->
+    </div>
+  </div>
+
+  <script>
+    // ===== 常量定义 =====
+    const OPTIONS = [
+      { value: 1, label: '没有' },
+      { value: 2, label: '很轻' },
+      { value: 3, label: '中等' },
+      { value: 4, label: '偏重' },
+      { value: 5, label: '严重' }
+    ];
+
+    // 90 道题目原文
+    const QUESTIONS = [
+      '头痛', '神经过敏，心中不踏实', '头脑中有不必要的想法或字句盘旋', '头昏或昏倒',
+      '对异性的兴趣减退', '对旁人责备求全', '感到别人能控制自己的思想', '责怪别人制造麻烦',
+      '忘性大', '担心自己的衣饰整齐及仪态的端正', '容易烦恼和激动', '胸痛',
+      '害怕空旷的场所或街道', '感到自己的精力下降，活动减慢', '想结束自己的生命', '听到旁人听不到的声音',
+      '发抖', '感到大多数人都不可信任', '胃口不好', '容易哭泣',
+      '同异性相处时感到害羞不自在', '受骗，中了圈套或有人想抓住', '无缘无故地突然感到害怕', '自己不能控制地大发脾气',
+      '怕单独出门', '经常责怪自己', '腰痛', '感到难以完成任务',
+      '感到孤独', '感到苦闷', '过分担忧', '对事物不感兴趣',
+      '感到害怕', '我的感情容易受到伤害', '旁人能知道自己的私下想法', '感到别人不理解自己、不同情自己',
+      '感到人们对自己不友好、不喜欢自己', '做事必须做得很慢，以保证做得正确', '心跳得很厉害', '恶心或胃部不舒服',
+      '感到比不上他人', '肌肉酸痛', '感到有人在监视自己、谈论自己', '难以入睡',
+      '做事必须反复检查', '难以作出决定', '怕乘电车、公共汽车、地铁或火车', '呼吸有困难',
+      '一阵阵发冷或发热', '因为感到害怕而避开某些东西、场合或活动', '脑子变空了', '身体发麻或刺痛',
+      '喉咙有梗塞感', '感到前途没有希望', '不能集中注意', '感到身体的某一部分软弱无力',
+      '感到紧张或容易紧张', '感到手或脚发重', '想到死亡的事', '吃得太多',
+      '当别人看着自己或谈论自己时感到不自在', '有一些不属于自己的想法', '有想打人或伤害他人的冲动', '醒得太早',
+      '必须反复洗手、点数目或触摸某些东西', '睡得不稳不深', '有想摔坏或破坏东西的冲动', '有一些别人没有的想法或念头',
+      '感到对别人神经过敏', '在商店或电影院等人多的地方感到不自在', '感到任何事情都很困难', '一阵阵恐惧或惊恐',
+      '感到公共场合吃东西很不舒服', '经常与人争论', '单独一人时神经很紧张', '别人对我的成绩没有作出恰当的评价',
+      '即使和别人在一起也感到孤单', '感到坐立不安心神不定', '感到自己没有什么价值', '感到熟悉的东西变成陌生或不像真的',
+      '大叫或摔东西', '害怕会在公共场合昏倒', '感到别人想占自己的便宜', '为一些有关性的想法而苦恼',
+      '我认为应因为自己的过错而受到惩罚', '感到要很快把事情做完', '感到自己的身体有严重问题', '从未感到和其他人很亲近',
+      '感到自己有罪', '感到自己的脑子有毛病'
+    ];
+
+    // 10 个因子：名称、条目编号（1-based）、简称
+    const FACTORS = [
+      { key: 'somatization', name: '躯体化', short: 'SOM', items: [1,4,12,27,40,42,48,49,52,53,56,58] },
+      { key: 'obsessive', name: '强迫症状', short: 'O-C', items: [3,9,10,28,38,45,46,51,55,65] },
+      { key: 'interpersonal', name: '人际关系敏感', short: 'INT', items: [6,21,34,36,37,41,61,69,73] },
+      { key: 'depression', name: '抑郁', short: 'DEP', items: [5,14,15,20,22,26,29,30,31,32,54,71,79] },
+      { key: 'anxiety', name: '焦虑', short: 'ANX', items: [2,17,23,33,39,57,72,78,80,86] },
+      { key: 'hostility', name: '敌对', short: 'HOS', items: [11,24,63,67,74,81] },
+      { key: 'phobic', name: '恐怖', short: 'PHOB', items: [13,25,47,50,70,75,82] },
+      { key: 'paranoid', name: '偏执', short: 'PAR', items: [8,18,43,68,76,83] },
+      { key: 'psychotic', name: '精神病性', short: 'PSY', items: [7,16,35,62,77,84,85,87,88,90] },
+      { key: 'other', name: '其他（睡眠饮食）', short: 'ADD', items: [19,44,59,60,64,66,89] }
+    ];
+
+    // 正常成人常模因子均分（参考值）
+    const NORMS = {
+      somatization: 1.37, obsessive: 1.62, interpersonal: 1.65, depression: 1.50,
+      anxiety: 1.39, hostility: 1.46, phobic: 1.23, paranoid: 1.43,
+      psychotic: 1.29, other: null
+    };
+
+    // ===== DOM =====
+    const form = document.getElementById('sclForm');
+    const resultArea = document.getElementById('resultArea');
+    const surveyArea = document.getElementById('surveyArea');
+    const answeredCountEl = document.getElementById('answeredCount');
+    const progressPercentEl = document.getElementById('progressPercent');
+    const progressFill = document.getElementById('progressFill');
+    const submitBtn = document.getElementById('submitBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const themeToggle = document.getElementById('themeToggle');
+
+    // ===== 渲染题目 =====
+    function renderQuestions() {
+      form.innerHTML = QUESTIONS.map((text, idx) => {
+        const num = idx + 1;
+        const opts = OPTIONS.map(o => `
+          <div class="opt">
+            <input type="radio" name="q${num}" id="q${num}_${o.value}" value="${o.value}">
+            <label for="q${num}_${o.value}">${o.label}</label>
+          </div>
+        `).join('');
+        return `
+          <div class="q-item" data-q="${num}">
+            <div class="q-text"><span class="q-num">${num}.</span><span>${text}</span></div>
+            <div class="options">${opts}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ===== 进度更新 =====
+    function getAnswers() {
+      const answers = {};
+      for (let i = 1; i <= 90; i++) {
+        const checked = form.querySelector(`input[name="q${i}"]:checked`);
+        if (checked) answers[i] = parseInt(checked.value, 10);
+      }
+      return answers;
+    }
+
+    function updateProgress() {
+      const answers = getAnswers();
+      const count = Object.keys(answers).length;
+      answeredCountEl.textContent = count;
+      const percent = Math.round((count / 90) * 100);
+      progressPercentEl.textContent = percent + '%';
+      progressFill.style.width = percent + '%';
+      submitBtn.disabled = count < 90;
+    }
+
+    // ===== 计算 =====
+    function calculate(answers) {
+      const total = Object.values(answers).reduce((s, v) => s + v, 0);
+      const mean = total / 90;
+      const positiveCount = Object.values(answers).filter(v => v >= 2).length;
+      const negativeCount = 90 - positiveCount;
+      const positiveMean = positiveCount > 0 ? (total - negativeCount) / positiveCount : 0;
+
+      const factorResults = FACTORS.map(f => {
+        const sum = f.items.reduce((s, n) => s + (answers[n] || 0), 0);
+        const score = sum / f.items.length;
+        return { ...f, sum, score };
+      });
+
+      const positiveByTotal = total > 160;
+      const positiveByCount = positiveCount > 43;
+      const positiveByFactor = factorResults.some(f => f.score > 2);
+      const screenPositive = positiveByTotal || positiveByCount || positiveByFactor;
+
+      return { total, mean, positiveCount, negativeCount, positiveMean, factorResults, screenPositive, positiveByTotal, positiveByCount, positiveByFactor };
+    }
+
+    // ===== 结果渲染 =====
+    function renderResult(data) {
+      const { total, mean, positiveCount, positiveMean, factorResults, screenPositive } = data;
+
+      const factorRows = factorResults.map(f => {
+        const pct = Math.min((f.score / 5) * 100, 100);
+        const norm = NORMS[f.key];
+        let badgeHtml = '';
+        if (f.score >= 4) badgeHtml = '<span class="badge warn">较重</span>';
+        else if (f.score >= 3) badgeHtml = '<span class="badge warn">中度</span>';
+        else if (f.score >= 2) badgeHtml = '<span class="badge">轻度</span>';
+        else if (norm !== null && f.score > norm) badgeHtml = '<span class="badge">高于常模</span>';
+
+        const normNote = norm !== null
+          ? `常模 ${norm.toFixed(2)}`
+          : '参考睡眠/饮食';
+
+        return `
+          <div class="factor-row">
+            <span class="factor-name">${f.name}</span>
+            <div class="factor-bar-track">
+              <div class="factor-bar" data-width="${pct}"></div>
+            </div>
+            <span class="factor-score">${f.score.toFixed(2)}${badgeHtml}</span>
+            <div class="factor-note">${normNote}</div>
+          </div>
+        `;
+      }).join('');
+
+      let alertClass, alertText;
+      if (screenPositive) {
+        alertClass = 'positive';
+        const reasons = [];
+        if (total > 160) reasons.push(`总分 ${total} > 160`);
+        if (positiveCount > 43) reasons.push(`阳性项目数 ${positiveCount} > 43`);
+        const highFactors = factorResults.filter(f => f.score > 2).map(f => f.name);
+        if (highFactors.length) reasons.push(`因子分偏高：${highFactors.join('、')}`);
+        alertText = `筛查提示：按国内常用标准，本次结果达到“筛选阳性”参考线（${reasons.join('；')}），建议结合近期状态关注，如有需要可寻求专业心理支持进一步评估。`;
+      } else {
+        alertClass = 'neutral';
+        alertText = '筛查提示：按国内常用标准（总分 > 160、阳性项目数 > 43、任一因子分 > 2），本次结果未达到筛选阳性参考线。量表结果仅供初步参考，不能替代专业诊断。';
+      }
+
+      resultArea.innerHTML = `
+        <div class="result-card">
+          <h2>总体指标</h2>
+          <div class="summary-grid">
+            <div class="stat"><div class="val">${total}</div><div class="lbl">总分</div></div>
+            <div class="stat"><div class="val">${mean.toFixed(2)}</div><div class="lbl">总均分</div></div>
+            <div class="stat"><div class="val">${positiveCount}</div><div class="lbl">阳性项目数</div></div>
+          </div>
+          <div class="screen-alert ${alertClass}">${alertText}</div>
+        </div>
+
+        <div class="result-card">
+          <h2>因子分</h2>
+          <div class="factor-list">${factorRows}</div>
+          <div class="factor-note" style="margin-top:14px;grid-column:1/-1;">
+            因子分 = 该因子条目均分（1–5 分）。≥2 提示轻度，≥3 提示中度，≥4 提示较重。常模参考正常成人因子均分。
+          </div>
+        </div>
+
+        <div class="disclaimer">
+          <strong>免责声明：</strong>本工具基于 SCL-90 公开量表条目实现，用于自我了解与初步筛查，<strong>不能作为临床诊断依据</strong>。心理症状受多种因素影响，量表只反映最近一周的主观感受。如果某些困扰持续存在或明显影响生活，请务必联系精神科医生或专业心理咨询师进行面对面评估。<br> <a href="https://hoshinohb.de5.net/">&copy;HoshinoHB All.</a>
+        </div>
+
+        <div class="actions" style="position:static;background:none;padding-top:10px;">
+          <button class="btn btn-primary" type="button" id="backToEdit">返回修改</button>
+          <button class="btn btn-ghost" type="button" id="restartFromResult">重新开始</button>
+        </div>
+      `;
+
+      resultArea.classList.add('visible');
+      surveyArea.classList.add('hidden');
+
+      // 条形图动画
+      requestAnimationFrame(() => {
+        resultArea.querySelectorAll('.factor-bar').forEach(bar => {
+          bar.style.width = bar.dataset.width + '%';
+        });
+      });
+
+      document.getElementById('backToEdit').addEventListener('click', () => {
+        resultArea.classList.remove('visible');
+        surveyArea.classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+
+      document.getElementById('restartFromResult').addEventListener('click', resetAll);
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ===== 重置 =====
+    function resetAll() {
+      form.reset();
+      resultArea.innerHTML = '';
+      resultArea.classList.remove('visible');
+      surveyArea.classList.remove('hidden');
+      document.querySelectorAll('.q-item.missing').forEach(el => el.classList.remove('missing'));
+      updateProgress();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ===== 事件 =====
+    form.addEventListener('change', (e) => {
+      if (e.target.type === 'radio') {
+        const qItem = e.target.closest('.q-item');
+        if (qItem) {
+          qItem.classList.add('answered');
+          qItem.classList.remove('missing');
+        }
+        updateProgress();
+      }
+    });
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const answers = getAnswers();
+      const missing = [];
+      for (let i = 1; i <= 90; i++) {
+        if (!answers[i]) missing.push(i);
+      }
+
+      if (missing.length > 0) {
+        document.querySelectorAll('.q-item.missing').forEach(el => el.classList.remove('missing'));
+        missing.forEach(n => {
+          const el = form.querySelector(`.q-item[data-q="${n}"]`);
+          if (el) el.classList.add('missing');
+        });
+        const first = form.querySelector(`.q-item[data-q="${missing[0]}"]`);
+        if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        alert(`还有 ${missing.length} 题未作答，已用描边标出，请补全后提交。`);
+        return;
+      }
+
+      renderResult(calculate(answers));
+    });
+
+    resetBtn.addEventListener('click', () => {
+      if (Object.keys(getAnswers()).length > 0 && !confirm('确定要清空所有作答并重新开始吗？')) return;
+      resetAll();
+    });
+
+    // ===== 主题切换 =====
+    function getPreferredTheme() {
+      const stored = localStorage.getItem('scl90-theme');
+      if (stored === 'light' || stored === 'dark') return stored;
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      themeToggle.textContent = theme === 'dark' ? '☀' : '◐';
+      themeToggle.setAttribute('aria-label', theme === 'dark' ? '切换为浅色模式' : '切换为深色模式');
+    }
+
+    themeToggle.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme') || getPreferredTheme();
+      const next = current === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('scl90-theme', next);
+      applyTheme(next);
+    });
+
+    // 系统主题变化时，如果用户没有手动锁定则跟随
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      if (!localStorage.getItem('scl90-theme')) {
+        applyTheme(e.matches ? 'dark' : 'light');
+      }
+    });
+
+    // ===== 初始化 =====
+    renderQuestions();
+    applyTheme(getPreferredTheme());
+    updateProgress();
+  </script>
+</body>
+</html>
