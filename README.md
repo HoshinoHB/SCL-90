@@ -4,3 +4,6 @@
 # 安装
 - 通过`git clone https://github.com/HoshinoHB/SCL-90.git`克隆项目代码到本地。
 - 在终端输入`python -m http.server 8080`启动本地服务器。
+
+# 注意⚠️
+## 本 SCL‑90 项目仅作自评参考，不能当成诊断工具，请自行去医院进行专业评估。
